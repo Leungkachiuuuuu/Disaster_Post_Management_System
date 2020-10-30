@@ -1,0 +1,61 @@
+<html>
+    <head>
+        {% if title %}
+        <title>Disaster Management System</title>
+        {% else %}
+        <title>Disaster Management System</title>
+        {% endif %}
+
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">  
+
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script> <!-- for jquery -->
+
+    </head>
+    <body>
+        <header>
+
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> 
+                <a class="navbar-brand" href="{{ url_for('index') }}">Disaster Relief Management System</a>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            {% if current_user.is_anonymous %}
+                            <li class="nav-item"><a href="{{ url_for('login') }}" class="nav-link">Log In</a></li>
+                            {% else %}
+                            <li class="nav-item"><a href="{{ url_for('logout') }}" class="nav-link">Log Out</a></li>
+                            {%endif%}
+
+                        </ul>
+                    </div>
+            </nav>
+        </header>
+        <!--
+        <div>
+            Microblog:
+            <a href="{{ url_for('index') }}">Home</a>
+            {% if current_user.is_anonymous %}
+            <a href="{{ url_for('login') }}">Login</a>
+            {% else %}
+            <a href="{{ url_for('logout') }}">Logout</a>
+            {% endif %}
+        </div>
+        -->
+        <hr>
+        <!-- Begin page content -->
+        <main role="main" class="container" style="padding: 72px 15px 0;">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Post</title>
+    		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script> <!-- for jquery -->
+
+        <script type= "text/javascript">
+        	$(document).on('click', '#AddTaskButton', function() {
+		    	$('#add_task_form').show()
+		    });
+
+		    $(document).on('click', '#cancel_create_task', function() {
+		    	$('#add_task_form').hide()
+		    });
+
+			$(document).on('click', '#cancel_donate', function() {
+		    	$('#Donate').hide()
+		    	$('#Donate_item').show()
+		    });
+
+            console.log('text js called')
+            $(document).on('click', '.delete_item', function() {
+            	item_id = $(this).attr('id'),
+                console.log('click detected item id = ', $(this).attr('id'))
+                $.getJSON('/_delete_item', {
+			        item_id: item_id
+			      }, function(data) {
+			      	console.log('returned data = ', data.result)
+			      	$('#Post_Item_'+item_id).remove()
+			        //$("#result").text(data.result);
+			        return false;
+			      });
+            });
+
+			$(document).on('click', '#Donate_item', function() {
+		    	item_id = $(this).attr('value')
+		    	console.log('item_id is ', item_id)
+				document.getElementById("complete").value = item_id
+				$('#Donate_item').hide()
+		    	$('#Donate').show()
+		    	i = document.getElementById('#Post_Item_'+item_id)
+		    });
+
+			$(document).on('click', '.complete', function() {
+				item_id = $(this).attr('value')
+				console.log('value is', item_id)
+				quantity = $('#donate_quantity').val()
+				donor_id = $(this).attr('data-value')
+				console.log('donor_id is ',donor_id)
+				max_quantity = $('#quantity_change').attr('value')
+				quantity = parseInt(quantity)
+				max_quantity =parseInt(max_quantity)
+				console.log('max_quantity is ', max_quantity)
+				if(max_quantity>quantity || max_quantity==quantity){
+				if(quantity >0){
+				$('#Donate_item').show()
+				$('#Donate').hide()
+				$('#quantity_change').attr('value',(max_quantity-quantity))
+				cur_value = $('#quantity_change').attr('value')
+				$('#quantity_change').text(cur_value)
+				$.getJSON('/_donate_item',{
+				item_id :item_id,
+				quantity : quantity,
+				donor_id : donor_id
+				}, function(data) {
+				console.log('returned data = ',data.result)
+				donate = data.donate
+				new_elem = "<tr id = Donate_"+donate.id+" > \
+							<td> \
+								"+donate.donor_name+" \
+							</td> \
+							<td> \
+								"+ donate.item_name + " \
+							</td> \
+							<td> \
+								" + donate.quantity +" \
+							</td> \
+							<td> \
+							    Yes \
+							</td> \
+						</tr>"
+				$('#donatetable tbody').append(new_elem)
+			    return false;
+
+				})}
+				else if (quantity < 0 || quantity == 0){
+				alert("type a positive number")
+				console.log("negative")
+				}}
+				else {
+				console.log('max_quantity is', max_quantity)
+				console.log('quantity is', quantity)
+				console.log("too big")
+				alert("please type a positive number smaller than max quantity")
+				};
+			});
+
+            $(document).on('click', '.create_item', function() {
+            	url = window.location.href
+            	index = url.lastIndexOf("post")
+            	post_id = url.slice(index+4)
+            	item_name = $('#item_name').val()
+            	item_quantity = $('#item_quantity').val()
+            	item_unit = $('#item_unit').val()
+            	console.log('Name', item_name)
+                console.log('Quantity', item_quantity)
+                console.log('Unit', item_unit)
+                $('#add_task_form').hide()
+                $.getJSON('/_create_item', {
+			        item_name : item_name,
+			        item_quantity : item_quantity,
+			        item_unit,
+			        post_id : post_id
+			      }, function(data) {
+			      	console.log('returned data = ', data)
+			      	item = data.Item
+			      	new_elem = "<tr id = Post_Item_"+item.id+" > \
+							<td> \
+								"+item.name+" \
+							</td> \
+							<td> \
+								"+ item.quantity + " \
+							</td> \
+							<td> \
+								" + item.unit +" \
+							</td> \
+							<td> \
+							    Yes \
+							</td> \
+						</tr>"
+					$('#tasktable tbody').append(new_elem)
+			        //$("#result").text(data.result);
+			        return false;
+			      });
+            });
+
+
+
+        </script>
+
+
+</head>
+<body>
+
+<h1 style ="text-align:center; margin-top:50px;">
+    Title: {{post.title}}
+</h1>
+<h2 style = "font-size:30px">Description: {{post.body}}</h2>
+    <h3 style = "font-size:30px"> Author: {{post.author.username}}</h3>
+
+		<header>
+
+			<!-- Fixed navbar -->
+			<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+				<a class="navbar-brand" href="{{ url_for('index') }}">Disaster Relief Management System</a>
+					<div class="collapse navbar-collapse" id="navbarCollapse">
+						<ul class="navbar-nav mr-auto">
+
+							<li class="nav-item"><a href="{{ url_for('logout') }}" class="nav-link">Log Out</a></li>
+
+						</ul>
+					</div>
+			</nav>
+		</header>
+		<main role="main" class="container" style="padding: 72px 15px 0;">
+			{%if current_user.user_type != 'D'%}
+            <button class="btn btn-primary" id="AddTaskButton" type="button"
+			  data-toggle="collapse" data-target="#AddEditTask">Add</button>
+			{% endif %}
+
+			<div id='add_task_form' style="display:none">
+
+			    <div class="form-group" >
+					<p>
+						<label for="item_name">Item name:</label>
+						<input class="form-control" type="text" name="item" autofocus="" maxlength="254" required="" id="item_name" placeholder="Name of the item" >
+					</p>
+			    </div>
+
+			    <div class="form-group">
+					<p>
+						<label for="item_quantity">Quantity:</label>
+						<textarea class="form-control" type="text" name="quantity" required="" id="item_quantity" placeholder="Quantity of the item"></textarea>
+					</p>
+			    </div>
+
+				<div class="form-group">
+					<p>
+						<label for="item_unit">Unit:</label>
+						<textarea class="form-control" type="text" name="unit" required="" id="item_unit" placeholder="Unit"></textarea>
+					</p>
+			    </div>
+				<div class="form-group">
+					<p>
+						<label for="Additional information">Additional information:</label>
+						<textarea class="form-control" type="text" name="Additional information" id="Additional information" placeholder ="Additional information"></textarea>
+					</p>
+			    </div>
+				<!--<div class="form-group">
+					<p>
+						<label for="item_unit">Unit:</label>
+						<textarea class="form-control" type="text" name="unit" required="" id="item_unit" placeholder="Description of the task"></textarea>
+					</p>
+			    </div>-->
+
+			    <button class="btn btn-primary create_item">Submit</button>
+			    <button id="cancel_create_task" class="btn btn-success" style="margin-left:12px">Cancel</button>
+			</div>
+
+
+
+			<table class="table" id="tasktable" style="margin-top: 20px;">
+				    <tr class="nodrop">
+				    	<th>Item name</th>
+						<th>Quantity</th>
+						<th>Unit</th>
+						<th>Active</th>
+						{% if current_user.user_type == 'Admin' or current_user.user_type == 'R'%}
+						   <th>Delete</th>
+						{% endif %}
+						{% if current_user.user_type == 'D'%}
+							<th>Donate</th>
+						{% endif%}
+				    </tr>
+
+				    {% for item in items %}
+						{% if item.quantity >0 %}
+						<tr id = Post_Item_{{item.id}} >
+							<td>
+								{{item.name}}
+							</td>
+							<td id="quantity_change" value={{item.quantity}}>
+								{{ item.quantity}}
+							</td>
+							<td>
+								{{item.unit}}
+							</td>
+
+							<td>Yes</td>
+							<td id="Donate" style="display:none">
+								<div class="form-group">
+									<p>
+										<label for="donate_quantity">Quantity:</label>
+									</p>
+									<form action="/action_page.php">
+									  <input name="n"
+											 type="number"
+											 min="1"
+											 max={{item.quantity}}
+											 step="1"
+											 value="1"
+									  id = donate_quantity>
+									</form>
+								</div>
+					<div class="form-group">
+						<p>
+							<button class="complete btn btn-primary" id = "complete" value = 1 data-value ={{current_user.id}}>Complete</button>
+						</p>
+					</div>
+					<div class="form-group">
+						<p>
+							<button class="cancel_donate btn btn-primary" id = "cancel_donate" >Cancel</button>
+						</p>
+					</div>
+
+				</td>
+<!--
+								<td>
+									<button class="btn btn-info btn-sm" disabled>
+										{% if post.active %}
+										Completed
+										{% else %}
+										Pending
+										{% endif %}
+									</button>
+								</td>
+						    -->
+
+							<!--{% if current_user.user_type == 'admin' %}
+					           <td>
+					           	    <button class='delete_post btn btn-danger btn-sm' id = {{ post.id }}>Delete post </button>
+					           	</td>
+					        {% endif%}-->
+							{% if current_user.id == post.user_id or current_user.user_type == 'admin' %}
+					           <td>
+					           	    <button class='delete_item btn btn-danger btn-sm' id = {{ item.id }}>Delete item </button>
+							   </td>
+					        {% endif%}
+							{% if current_user.user_type == 'D' %}
+					           <td>
+					           	    <button class='Donate_item btn btn-danger btn-sm' id = "Donate_item" value = {{item.id}} >Donate item </button>
+							   </td>
+					        {% endif%}
+
+
+						</tr>
+						{% endif%}
+				    {% endfor %}
+				  </table>
+
+			<p style="text-align:center; font-size:30px"> Donated List </p>
+			<table class="table" id="donatetable" style="margin-top: 20px;">
+				    <tr class="nodrop">
+				    	<th>Donor name</th>
+						<th>Item</th>
+						<th>Quantity</th>
+				    	<th>Created on</th>
+
+				    </tr>
+				    {% for donate in donates %}
+						<tr id = {{donate.id}} >
+							<td>
+								{{donate.donor_id}}
+							</td>
+							<td>
+								{{donate.item_id}}
+							</td>
+							<td>
+								{{donate.quantity}}
+							</td>
+
+							<td>Yes</td>
+
+<!--
+								<td>
+									<button class="btn btn-info btn-sm" disabled>
+										{% if post.active %}
+										Completed
+										{% else %}
+										Pending
+										{% endif %}
+									</button>
+								</td>
+						    -->
+
+							<!--{% if current_user.user_type == 'admin' %}
+					           <td>
+					           	    <button class='delete_post btn btn-danger btn-sm' id = {{ post.id }}>Delete post </button>
+					           	</td>
+					        {% endif%}-->
+
+
+						</tr>
+				    {% endfor %}
+				  </table>
+
+        </main>
+</body>
+</html>
+
